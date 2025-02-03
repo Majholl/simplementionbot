@@ -164,5 +164,5 @@ def show_panel(bot , message):
 
         
 
-bot.polling()
+bot.infinity_polling()
 
