@@ -5,22 +5,44 @@ from dbconnection import makeDBoperations
 from datetime import datetime
 from utils import amountToTag , users_list
 from keyboard.keyboard import Mykeyboard 
-from telebot.types import ReplyKeyboardRemove
+import re
+
 
 
 load_dotenv()
 BOTTOKEN = os.getenv("BOTTOKEN")
-
 bot =  TeleBot(BOTTOKEN)
-
 users_id_of_chats = {}
 
 
-
-@bot.message_handler(func=lambda message: not (message.text.startswith("/panel@") or message.text in ["@all", "/panel"]))
+@bot.message_handler(func=lambda message: True , chat_types=['supergroup' , 'group'] )
 def handle_msg(message):
+    try:
+        reg = r'@all'
+        searchingMessageTxtAll = re.search(reg , message.text)
+
+        if searchingMessageTxtAll:
+            if message.reply_to_message is None:   
+                allForNonreplies(bot , message)
+            else:
+                if len(message.text.split('\n')) >1 or len(message.text.split(' ')) > 1:
+                    allForNonreplies(bot , message)
+                else:
+                    messageId = message.reply_to_message.id
+                    allForReplies(bot , message ,messageId)
+    except Exception as err:
+        print(err, '@all get msg')        
+
+    try:
+        regPanel = r'/panel'
+        searchingMessageTxtPanel = re.search(regPanel , message.text)
+        if searchingMessageTxtPanel:
+            show_panel(bot ,message)
+    except Exception as err:
+        print(err , '/panel open panel')
+
+
     if message:
-        
         try:
             userId = message.from_user.id
             userName = message.from_user.first_name
@@ -49,6 +71,42 @@ def handle_msg(message):
         
 
 
+def allForNonreplies(bot ,message): 
+    try:
+        admins_ = bot.get_chat_administrators(message.chat.id)
+        admins__list = [usrid.user.id for usrid in admins_]
+            
+        if message.from_user.id in admins__list:
+            myusers_list = users_list(bot , message)
+            list_men = amountToTag(myusers_list)
+            bot.reply_to(message , text='\n'.join(list_men)  , parse_mode ="HTML")
+            
+        else:
+            bot.reply_to(message , 'only admins !!')  
+    except Exception as err:
+        print('scraping user failed' , err)
+        bot.send_message(message.chat.id, 'no user has been detected yet  !!!')
+
+
+
+def allForReplies(bot ,message , messageid): 
+    try:
+        admins_ = bot.get_chat_administrators(message.chat.id)
+        admins__list = [usrid.user.id for usrid in admins_]
+            
+        if message.from_user.id in admins__list:
+            myusers_list = users_list(bot , message)
+            list_men = amountToTag(myusers_list)
+
+            bot.send_message(message.chat.id , text='\n'.join(list_men)  ,reply_to_message_id=messageid , parse_mode ="HTML")
+        else:
+            bot.reply_to(message , 'only admins !!')  
+    except Exception as err:
+        print('scraping user failed' , err)
+        bot.send_message(message.chat.id, 'no user has been detected yet  !!!')
+
+
+      
 AMOUNT_DICT ={}
 @bot.callback_query_handler(func= lambda call : call.data in ['amount_ofmentions' , 'mentions_now' , 'close_mention_menu'])
 def load_keyboard(call):
@@ -74,8 +132,6 @@ def load_keyboard(call):
 
 
 
-
-
 def get_amount_to_mention(message):
     if message.text.isdigit():
         try:
@@ -91,57 +147,22 @@ def get_amount_to_mention(message):
   
 
 
-
-
-
-@bot.message_handler(func= lambda message: message.text.startswith('@all'))
-def handle_message(message):
-    
-    if '@all' in message.text:
-        try:
-            admins_ = bot.get_chat_administrators(message.chat.id)
-            admins__list = [usrid.user.id for usrid in admins_]
+def show_panel(bot , message):
+    try:
+        admins_ = bot.get_chat_administrators(message.chat.id)
+        admins__list = [usrid.user.id for usrid in admins_]
             
-            if message.from_user.id in admins__list:
-                myusers_list = users_list(bot , message)
-                list_men = amountToTag(myusers_list)
-
-                bot.send_message(message.chat.id , '\n'.join(list_men) , parse_mode="HTML")  
+        if message.from_user.id in admins__list:
+            Text_ = 'panel loaded'
+            bot.reply_to(message , Text_ ,reply_markup=Mykeyboard.panel_keyboard())
                 
-
-            else:
-                bot.reply_to(message , 'only admins !!')  
-        except Exception as err:
-            print('scraping user failed' , err)
-            bot.send_message(message.chat.id, 'no user has been detected yet  !!!')
-        return 
-    
-
-
-
-
-
-
-@bot.message_handler(func=lambda message: message.text.startswith('/panel'))
-def show_panel(message):
-    command = message.text.split('@')[0] 
-    
-    if command == '/panel':  
-        try:
-            admins_ = bot.get_chat_administrators(message.chat.id)
-            admins__list = [usrid.user.id for usrid in admins_]
-            
-            if message.from_user.id in admins__list:
-                Text_ = 'panel loaded'
-                bot.reply_to(message , Text_ ,reply_markup=Mykeyboard.panel_keyboard())
-                
-            else:
-                bot.send_message(message.chat.id, "only admins !!")
-        except Exception as err:
-            print('Error loading keyboard:', err)
+        else:
+            bot.send_message(message.chat.id, "only admins !!")
+    except Exception as err:
+        print('Error loading keyboard:', err)
 
 
         
 
-        
 bot.polling()
+
