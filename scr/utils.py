@@ -1,8 +1,5 @@
 from dbconnection import makeDBoperations
 
-
-
-
 def users_list (bot , message):
     try:
         mentioned_users = []
