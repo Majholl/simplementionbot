@@ -68,34 +68,28 @@ def handle_msg(message):
 
 def allForNonreplies(bot, message):
     try:
-        admins_ = bot.get_chat_administrators(message.chat.id)
-        admins__list = [usrid.user.id for usrid in admins_]
+        
+        myusers_list = users_list(bot, message)
+        list_men = amountToTag(myusers_list)
+        bot.reply_to(message, text='\n'.join(list_men), parse_mode="HTML")
 
-        if message.from_user.id in admins__list:
-            myusers_list = users_list(bot, message)
-            list_men = amountToTag(myusers_list)
-            bot.reply_to(message, text='\n'.join(list_men), parse_mode="HTML")
-
-        else:
-            bot.reply_to(message, 'only admins !!')
     except Exception as err:
         print('scraping user failed', err)
         bot.send_message(message.chat.id, 'no user has been detected yet  !!!')
 
 
+
+
+
 def allForReplies(bot, message, messageid):
     try:
-        admins_ = bot.get_chat_administrators(message.chat.id)
-        admins__list = [usrid.user.id for usrid in admins_]
 
-        if message.from_user.id in admins__list:
-            myusers_list = users_list(bot, message)
-            list_men = amountToTag(myusers_list)
-
-            bot.send_message(message.chat.id, text='\n'.join(list_men), reply_to_message_id=messageid,
+       
+        myusers_list = users_list(bot, message)
+        list_men = amountToTag(myusers_list)
+        bot.send_message(message.chat.id, text='\n'.join(list_men), reply_to_message_id=messageid,
                              parse_mode="HTML")
-        else:
-            bot.reply_to(message, 'only admins !!')
+
     except Exception as err:
         print('scraping user failed', err)
         bot.send_message(message.chat.id, 'no user has been detected yet  !!!')
