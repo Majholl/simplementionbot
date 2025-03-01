@@ -15,4 +15,4 @@ WORKDIR /app/scr
 
 
 
-CMD ["sh", "-c", "[ python == '3.11' ] && python app.py"]
+CMD ["python", "app.py"]
