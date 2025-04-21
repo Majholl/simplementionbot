@@ -1,19 +1,14 @@
-FROM python:latest
+FROM python:alpine
 
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY requirements.txt .
 
-RUN pip install --upgrade pip && pip install  -r /app/requirements.txt
-
-
+RUN pip install --upgrade pip && pip install  -r requirements.txt
 
 
-COPY scr  /app/scr
-
-WORKDIR /app/scr
+COPY scr  .
 
 
-
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]
